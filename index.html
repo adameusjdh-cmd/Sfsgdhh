@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -11,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Cairo Font -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -65,14 +66,19 @@
                 </div>
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">مراجعات خمسة ابتدائي</h1>
-                    <p class="text-xs text-slate-500 font-medium">المنصة الشاملة للكتب والملازم والمراجعات</p>
+                    <p class="text-xs text-slate-500 font-medium">المنصة الشاملة للكتب والملازم والمراجعات (متصلة بقاعدة البيانات)</p>
                 </div>
             </div>
 
-            <button id="openPublishModalBtn" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-md shadow-sky-100 hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95">
-                <i class="fa-solid fa-plus-circle text-lg"></i>
-                <span>نشر محتوى جديد</span>
-            </button>
+            <div class="flex items-center gap-3">
+                <span id="dbStatus" class="text-xs font-bold px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle text-[8px] animate-pulse"></i> جاري الاتصال...
+                </span>
+                <button id="openPublishModalBtn" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-md shadow-sky-100 hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95">
+                    <i class="fa-solid fa-plus-circle text-lg"></i>
+                    <span>نشر محتوى جديد</span>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -81,7 +87,6 @@
         
         <!-- Filters & Search Bar -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 mb-8 space-y-4">
-            
             <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div class="relative w-full md:w-96">
                     <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -125,7 +130,6 @@
                     <button data-type="مراجعة" class="filter-type-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-all">مراجعة</button>
                 </div>
             </div>
-
         </div>
 
         <!-- Grid Cards Header -->
@@ -141,18 +145,17 @@
         <div id="postsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
         <!-- Empty State -->
-        <div id="emptyState" class="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-300 my-8">
+        <div id="emptyState" class="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-300 my-8 hidden">
             <div class="w-20 h-20 bg-sky-50 text-sky-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
             <h3 class="text-lg font-bold text-slate-800 mb-1">لا يوجد محتوى منشور حالياً</h3>
-            <p class="text-slate-500 text-sm max-w-md mx-auto mb-6">الموقع فارغ تماماً. يمكنك البدء الآن بنشر أول كتاب أو ملزمة أو مراجعة للصف الخامس الابتدائي عبر الزر أدناه.</p>
+            <p class="text-slate-500 text-sm max-w-md mx-auto mb-6">يمكنك البدء الآن بنشر أول كتاب أو ملزمة أو مراجعة للصف الخامس الابتدائي عبر الزر أدناه.</p>
             <button id="emptyPublishBtn" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition-all inline-flex items-center gap-2">
                 <i class="fa-solid fa-plus-circle"></i>
                 <span>انشر أول ملزمة الآن</span>
             </button>
         </div>
-
     </main>
 
     <!-- PUBLISH MODAL -->
@@ -165,7 +168,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-lg">نشر محتوى جديد لخامسة ابتدائي</h3>
-                        <p class="text-xs text-slate-500">قم بتعبئة البيانات واختر نوع المادة والملف</p>
+                        <p class="text-xs text-slate-500">قم بتعبئة البيانات وحفظها سحابياً</p>
                     </div>
                 </div>
                 <button id="closePublishModalBtn" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
@@ -229,42 +232,21 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">طريقة إرفاق الملزمة/الكتاب *</label>
-                    
-                    <div class="flex rounded-xl bg-slate-100 p-1 mb-3">
-                        <button type="button" id="tabUploadFileBtn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white shadow-sm text-sky-600 transition-all">
-                            <i class="fa-solid fa-file-pdf ml-1"></i> رفع ملف جاهز (PDF/Word)
-                        </button>
-                        <button type="button" id="tabUploadImageBtn" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 transition-all">
-                            <i class="fa-solid fa-camera ml-1"></i> صور متصورة
-                        </button>
-                    </div>
-
-                    <div id="fileUploadContainer" class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:bg-slate-50 transition-colors">
-                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx" class="hidden">
-                        <div onclick="document.getElementById('fileInput').click()" class="cursor-pointer space-y-2">
-                            <div class="w-10 h-10 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center mx-auto text-lg">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                            </div>
-                            <p id="fileInputLabel" class="text-xs font-semibold text-slate-600">اضغط هنا لاختيار ملف من جهازك</p>
-                            <p class="text-[10px] text-slate-400">يدعم صيغ PDF, Word</p>
-                        </div>
-                    </div>
-
-                    <div id="imagesUploadContainer" class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:bg-slate-50 transition-colors hidden">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">إرفاق الصور (صور المذكرة) *</label>
+                    <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:bg-slate-50 transition-colors">
                         <input type="file" id="imagesInput" accept="image/*" multiple class="hidden">
                         <div onclick="document.getElementById('imagesInput').click()" class="cursor-pointer space-y-2">
                             <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-lg">
                                 <i class="fa-solid fa-images"></i>
                             </div>
-                            <p id="imagesInputLabel" class="text-xs font-semibold text-slate-600">اختر صورة أو عدة صور للملزمة المصورة</p>
+                            <p id="imagesInputLabel" class="text-xs font-semibold text-slate-600">اختر صور الصفحات للملزمة</p>
                             <p class="text-[10px] text-slate-400">يمكنك اختيار أكثر من صورة معاً</p>
                         </div>
                         <div id="imagesPreview" class="flex flex-wrap gap-2 mt-3 justify-center"></div>
                     </div>
                 </div>
 
-                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                <button type="submit" id="submitBtn" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
                     <i class="fa-solid fa-paper-plane"></i>
                     <span>نشر المحتوى الآن</span>
                 </button>
@@ -274,7 +256,6 @@
 
     <!-- VIEWER & ELECTRONIC PEN MODAL -->
     <div id="viewerModal" class="fixed inset-0 bg-slate-900/90 z-50 flex flex-col hidden overflow-hidden">
-        
         <div class="bg-slate-800 text-white px-4 py-3 flex items-center justify-between border-b border-slate-700 z-20">
             <div class="flex items-center gap-3">
                 <span id="viewerTypeBadge" class="bg-sky-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-md">ملزمة</span>
@@ -286,12 +267,6 @@
                     <i class="fa-solid fa-pen-nib text-sm"></i>
                     <span>القلم الإلكتروني</span>
                 </button>
-
-                <button id="shareContentBtn" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm px-3 py-2 rounded-xl transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-share-nodes"></i>
-                    <span class="hidden sm:inline">مشاركة</span>
-                </button>
-
                 <button id="closeViewerModalBtn" class="bg-rose-500 hover:bg-rose-600 text-white text-xs sm:text-sm px-3 py-2 rounded-xl transition-all flex items-center gap-1">
                     <i class="fa-solid fa-xmark text-base"></i>
                 </button>
@@ -302,35 +277,21 @@
             <div class="flex items-center gap-2 flex-wrap">
                 <div class="flex bg-slate-700 rounded-lg p-1 gap-1">
                     <button id="toolPen" class="pen-tool-btn active bg-sky-500 text-white px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-pen"></i>
-                        <span class="hidden sm:inline">قلم</span>
-                    </button>
-                    <button id="toolText" class="pen-tool-btn hover:bg-slate-600 text-slate-300 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-font"></i>
-                        <span class="hidden sm:inline">نص</span>
+                        <i class="fa-solid fa-pen"></i><span>قلم</span>
                     </button>
                     <button id="toolEraser" class="pen-tool-btn hover:bg-slate-600 text-slate-300 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-eraser"></i>
-                        <span class="hidden sm:inline">ممحاة</span>
+                        <i class="fa-solid fa-eraser"></i><span>ممحاة</span>
                     </button>
                 </div>
-
                 <div class="h-5 w-[1px] bg-slate-700 mx-1"></div>
-
                 <div class="flex items-center gap-1.5">
-                    <span class="text-[11px] text-slate-400 font-semibold hidden md:inline">اللون:</span>
-                    <button data-color="#ef4444" class="color-btn w-6 h-6 rounded-full bg-red-500 border-2 border-white/80 transition-transform transform hover:scale-110 active:scale-95"></button>
-                    <button data-color="#22c55e" class="color-btn w-6 h-6 rounded-full bg-green-500 border-2 border-transparent transition-transform transform hover:scale-110 active:scale-95"></button>
-                    <button data-color="#3b82f6" class="color-btn w-6 h-6 rounded-full bg-blue-500 border-2 border-transparent transition-transform transform hover:scale-110 active:scale-95"></button>
-                    <button data-color="#eab308" class="color-btn w-6 h-6 rounded-full bg-yellow-500 border-2 border-transparent transition-transform transform hover:scale-110 active:scale-95"></button>
-                    <button data-color="#000000" class="color-btn w-6 h-6 rounded-full bg-black border-2 border-transparent transition-transform transform hover:scale-110 active:scale-95"></button>
-                    <input type="color" id="customColorPicker" value="#ef4444" class="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0 p-0">
+                    <button data-color="#ef4444" class="color-btn w-6 h-6 rounded-full bg-red-500 border-2 border-white/80 transition-transform"></button>
+                    <button data-color="#22c55e" class="color-btn w-6 h-6 rounded-full bg-green-500 border-2 border-transparent transition-transform"></button>
+                    <button data-color="#3b82f6" class="color-btn w-6 h-6 rounded-full bg-blue-500 border-2 border-transparent transition-transform"></button>
+                    <button data-color="#000000" class="color-btn w-6 h-6 rounded-full bg-black border-2 border-transparent transition-transform"></button>
                 </div>
-
                 <div class="h-5 w-[1px] bg-slate-700 mx-1"></div>
-
                 <div class="flex items-center gap-2">
-                    <span class="text-[11px] text-slate-400 font-semibold hidden lg:inline">السُّمك:</span>
                     <input type="range" id="brushSize" min="1" max="25" value="3" class="w-20 accent-sky-500 cursor-pointer">
                     <span id="brushSizeVal" class="text-xs font-mono text-slate-300 w-4">3</span>
                 </div>
@@ -338,12 +299,10 @@
 
             <div class="flex items-center gap-2">
                 <button id="clearCanvasBtn" class="bg-slate-700 hover:bg-rose-900/50 hover:text-rose-300 text-slate-300 text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                    <i class="fa-solid fa-trash-can"></i>
-                    <span>مسح الرسم</span>
+                    <i class="fa-solid fa-trash-can"></i><span>مسح الرسم</span>
                 </button>
                 <button id="downloadAnnotatedBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                    <i class="fa-solid fa-download"></i>
-                    <span>حفظ الصفحة المعدلة</span>
+                    <i class="fa-solid fa-download"></i><span>حفظ الصفحة</span>
                 </button>
             </div>
         </div>
@@ -355,26 +314,27 @@
             </div>
 
             <div id="multiPageControls" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-4 py-2 rounded-full shadow-2xl flex items-center gap-4 z-30 hidden border border-slate-700">
-                <button id="prevPageBtn" class="hover:text-sky-400 disabled:opacity-30">
-                    <i class="fa-solid fa-chevron-right text-lg"></i>
-                </button>
+                <button id="prevPageBtn" class="hover:text-sky-400 disabled:opacity-30"><i class="fa-solid fa-chevron-right text-lg"></i></button>
                 <span id="pageIndicator" class="text-xs font-bold">صفحة 1 من 1</span>
-                <button id="nextPageBtn" class="hover:text-sky-400 disabled:opacity-30">
-                    <i class="fa-solid fa-chevron-left text-lg"></i>
-                </button>
+                <button id="nextPageBtn" class="hover:text-sky-400 disabled:opacity-30"><i class="fa-solid fa-chevron-left text-lg"></i></button>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- Toast -->
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
         <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
         <span id="toastMessage" class="text-xs font-bold">تم الإجراء بنجاح</span>
     </div>
 
-    <!-- Script -->
+    <!-- Script Application -->
     <script>
-        let posts = JSON.parse(localStorage.getItem('mora3at_posts') || '[]');
+        // تم تعيين بيانات Suhttps://rcarqlqpkrhkkdvqbroh.supabase.co/rest/v1/pabase المباشرة بنجاح
+        const SUPABASE_URL = 'https://rcarqlqpkrhkkdvqbroh.supabase.co'
+        const SUPABASE_ANON_KEY = 'sb_publishable_mD82BQlYRqLTII5zkUT2kQ_wLXVIsgE';
+
+        let supabaseClient = null
+        let posts = [];
         let activeSubject = 'all';
         let activeType = 'all';
         let currentPost = null;
@@ -387,127 +347,89 @@
         let currentLineWidth = 3;
         let lastX = 0, lastY = 0;
 
-        const postsGrid = document.getElementById('postsGrid');
-        const emptyState = document.getElementById('emptyState');
-        const itemsCount = document.getElementById('itemsCount');
-        const searchInput = document.getElementById('searchInput');
-
-        const publishModal = document.getElementById('publishModal');
-        const viewerModal = document.getElementById('viewerModal');
-        const publishForm = document.getElementById('publishForm');
-
-        const tabUploadFileBtn = document.getElementById('tabUploadFileBtn');
-        const tabUploadImageBtn = document.getElementById('tabUploadImageBtn');
-        const fileUploadContainer = document.getElementById('fileUploadContainer');
-        const imagesUploadContainer = document.getElementById('imagesUploadContainer');
-        const fileInput = document.getElementById('fileInput');
-        const imagesInput = document.getElementById('imagesInput');
-
-        let uploadMode = 'file';
         let uploadedImagesBase64 = [];
-        let uploadedFileName = '';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderPosts();
+        document.addEventListener('DOMContentLoaded', async () => {
+            initSupabase();
             setupEventListeners();
             initCanvas();
+            await fetchPosts();
         });
+
+        function initSupabase() {
+            const statusBadge = document.getElementById('dbStatus');
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                statusBadge.className = 'text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1.5';
+                statusBadge.innerHTML = '<i class="fa-solid fa-circle text-[8px]"></i> متصل بقاعدة البيانات';
+            } catch (err) {
+                statusBadge.className = 'text-xs font-bold px-3 py-1.5 rounded-full bg-rose-100 text-rose-700 flex items-center gap-1.5';
+                statusBadge.innerHTML = '<i class="fa-solid fa-circle text-[8px]"></i> خطأ في الاتصال';
+            }
+        }
+
+        async function fetchPosts() {
+            if (!supabaseClient) {
+                posts = JSON.parse(localStorage.getItem('mora3at_posts') || '[]');
+                renderPosts();
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.from('posts').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                posts = data || [];
+                renderPosts();
+            } catch (err) {
+                showToast('تأكد من إنشاء جدول posts في Supabase', 'error');
+                posts = JSON.parse(localStorage.getItem('mora3at_posts') || '[]');
+                renderPosts();
+            }
+        }
 
         function setupEventListeners() {
             document.getElementById('openPublishModalBtn').addEventListener('click', openPublishModal);
             document.getElementById('emptyPublishBtn').addEventListener('click', openPublishModal);
             document.getElementById('closePublishModalBtn').addEventListener('click', closePublishModal);
 
-            // Filter Subjects
             document.querySelectorAll('.filter-subject-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.filter-subject-btn').forEach(b => b.classList.remove('active', 'bg-sky-600', 'text-white'));
+                    document.querySelectorAll('.filter-subject-btn').forEach(b => b.classList.remove('active', 'bg-sky-600', 'text-white', 'bg-slate-100', 'text-slate-700'));
                     document.querySelectorAll('.filter-subject-btn').forEach(b => b.classList.add('bg-slate-100', 'text-slate-700'));
-                    
-                    const target = e.currentTarget;
-                    target.classList.add('active', 'bg-sky-600', 'text-white');
-                    target.classList.remove('bg-slate-100', 'text-slate-700');
-                    
-                    activeSubject = target.getAttribute('data-subject');
+                    e.currentTarget.classList.add('active', 'bg-sky-600', 'text-white');
+                    e.currentTarget.classList.remove('bg-slate-100', 'text-slate-700');
+                    activeSubject = e.currentTarget.getAttribute('data-subject');
                     renderPosts();
                 });
             });
 
-            // Filter Types
             document.querySelectorAll('.filter-type-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.filter-type-btn').forEach(b => b.classList.remove('active', 'bg-slate-800', 'text-white'));
+                    document.querySelectorAll('.filter-type-btn').forEach(b => b.classList.remove('active', 'bg-slate-800', 'text-white', 'bg-slate-100', 'text-slate-700'));
                     document.querySelectorAll('.filter-type-btn').forEach(b => b.classList.add('bg-slate-100', 'text-slate-700'));
-                    
-                    const target = e.currentTarget;
-                    target.classList.add('active', 'bg-slate-800', 'text-white');
-                    target.classList.remove('bg-slate-100', 'text-slate-700');
-                    
-                    activeType = target.getAttribute('data-type');
+                    e.currentTarget.classList.add('active', 'bg-slate-800', 'text-white');
+                    e.currentTarget.classList.remove('bg-slate-100', 'text-slate-700');
+                    activeType = e.currentTarget.getAttribute('data-type');
                     renderPosts();
                 });
             });
 
-            searchInput.addEventListener('input', renderPosts);
+            document.getElementById('searchInput').addEventListener('input', renderPosts);
 
             document.getElementById('resetFiltersBtn').addEventListener('click', () => {
                 activeSubject = 'all';
                 activeType = 'all';
-                searchInput.value = '';
-                
-                document.querySelectorAll('.filter-subject-btn').forEach(b => {
-                    b.classList.remove('active', 'bg-sky-600', 'text-white');
-                    b.classList.add('bg-slate-100', 'text-slate-700');
-                });
-                document.querySelector('.filter-subject-btn[data-subject="all"]').classList.add('active', 'bg-sky-600', 'text-white');
-
-                document.querySelectorAll('.filter-type-btn').forEach(b => {
-                    b.classList.remove('active', 'bg-slate-800', 'text-white');
-                    b.classList.add('bg-slate-100', 'text-slate-700');
-                });
-                document.querySelector('.filter-type-btn[data-type="all"]').classList.add('active', 'bg-slate-800', 'text-white');
-
+                document.getElementById('searchInput').value = '';
                 renderPosts();
             });
 
-            // Upload Tabs Switcher
-            tabUploadFileBtn.addEventListener('click', () => {
-                uploadMode = 'file';
-                tabUploadFileBtn.classList.add('bg-white', 'shadow-sm', 'text-sky-600');
-                tabUploadFileBtn.classList.remove('text-slate-600');
-                tabUploadImageBtn.classList.remove('bg-white', 'shadow-sm', 'text-sky-600');
-                tabUploadImageBtn.classList.add('text-slate-600');
-
-                fileUploadContainer.classList.remove('hidden');
-                imagesUploadContainer.classList.add('hidden');
-            });
-
-            tabUploadImageBtn.addEventListener('click', () => {
-                uploadMode = 'images';
-                tabUploadImageBtn.classList.add('bg-white', 'shadow-sm', 'text-sky-600');
-                tabUploadImageBtn.classList.remove('text-slate-600');
-                tabUploadFileBtn.classList.remove('bg-white', 'shadow-sm', 'text-sky-600');
-                tabUploadFileBtn.classList.add('text-slate-600');
-
-                imagesUploadContainer.classList.remove('hidden');
-                fileUploadContainer.classList.add('hidden');
-            });
-
-            fileInput.addEventListener('change', (e) => {
-                if(e.target.files.length > 0) {
-                    uploadedFileName = e.target.files[0].name;
-                    document.getElementById('fileInputLabel').innerText = `تم اختيار الملف: ${uploadedFileName}`;
-                }
-            });
-
-            imagesInput.addEventListener('change', (e) => {
+            document.getElementById('imagesInput').addEventListener('change', (e) => {
                 const files = Array.from(e.target.files);
-                if(files.length > 0) {
+                if (files.length > 0) {
                     uploadedImagesBase64 = [];
                     const previewContainer = document.getElementById('imagesPreview');
                     previewContainer.innerHTML = '';
-                    
-                    document.getElementById('imagesInputLabel').innerText = `تم اختيار ${files.length} صورة/صور`;
+                    document.getElementById('imagesInputLabel').innerText = `تم اختيار ${files.length} صورة`;
 
                     files.forEach(file => {
                         const reader = new FileReader();
@@ -523,358 +445,220 @@
                 }
             });
 
-            publishForm.addEventListener('submit', handlePublishSubmit);
-
-            document.getElementById('closeViewerModalBtn').addEventListener('click', closeViewerModal);
-            
-            document.getElementById('togglePenToolbarBtn').addEventListener('click', () => {
-                const toolbar = document.getElementById('penToolbar');
-                toolbar.classList.toggle('hidden');
-                resizeCanvas();
-            });
-
-            document.getElementById('prevPageBtn').addEventListener('click', () => {
-                if(currentImageIndex > 0) {
-                    currentImageIndex--;
-                    loadViewerImage();
+            document.getElementById('publishForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (uploadedImagesBase64.length === 0) {
+                    showToast('يرجى إرفاق صورة واحدة على الأقل للملزمة', 'error');
+                    return;
                 }
-            });
 
-            document.getElementById('nextPageBtn').addEventListener('click', () => {
-                if(currentPost && currentPost.images && currentImageIndex < currentPost.images.length - 1) {
-                    currentImageIndex++;
-                    loadViewerImage();
-                }
-            });
+                const title = document.getElementById('postTitle').value;
+                const type = document.querySelector('input[name="contentType"]:checked').value;
+                const subject = document.getElementById('postSubject').value;
+                const description = document.getElementById('postDescription').value;
 
-            document.getElementById('shareContentBtn').addEventListener('click', () => {
-                if (navigator.share && currentPost) {
-                    navigator.share({
-                        title: currentPost.title,
-                        text: `شاهد ${currentPost.type} ${currentPost.title} لمادة ${currentPost.subject} على مراجعات خامسة ابتدائي`,
-                        url: window.location.href,
-                    }).catch(() => {});
+                const newPost = {
+                    title,
+                    type,
+                    subject,
+                    description,
+                    images: uploadedImagesBase64
+                };
+
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> جاري الحفظ...';
+
+                if (supabaseClient) {
+                    try {
+                        const { error } = await supabaseClient.from('posts').insert([newPost]);
+                        if (error) throw error;
+                        showToast('تم نشر المحتوى وحفظه سحابياً بنجاح!');
+                        closePublishModal();
+                        await fetchPosts();
+                    } catch (err) {
+                        showToast('تأكد من إنشاء جدول posts بشكل صحيح', 'error');
+                    }
                 } else {
-                    navigator.clipboard.writeText(window.location.href);
-                    showToast('تم نسخ رابط الصفحة بنجاح!');
+                    posts.unshift({ ...newPost, id: Date.now() });
+                    localStorage.setItem('mora3at_posts', JSON.stringify(posts));
+                    showToast('تم الحفظ محلياً بنجاح!');
+                    closePublishModal();
+                    renderPosts();
                 }
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>نشر المحتوى الآن</span>';
             });
-
-            document.getElementById('toolPen').addEventListener('click', (e) => setTool('pen', e.currentTarget));
-            document.getElementById('toolText').addEventListener('click', (e) => setTool('text', e.currentTarget));
-            document.getElementById('toolEraser').addEventListener('click', (e) => setTool('eraser', e.currentTarget));
-
-            document.querySelectorAll('.color-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.color-btn').forEach(b => b.classList.replace('border-white/80', 'border-transparent'));
-                    e.currentTarget.classList.replace('border-transparent', 'border-white/80');
-                    currentColor = e.currentTarget.getAttribute('data-color');
-                    document.getElementById('customColorPicker').value = currentColor;
-                });
-            });
-
-            document.getElementById('customColorPicker').addEventListener('input', (e) => {
-                currentColor = e.target.value;
-            });
-
-            document.getElementById('brushSize').addEventListener('input', (e) => {
-                currentLineWidth = e.target.value;
-                document.getElementById('brushSizeVal').innerText = currentLineWidth;
-            });
-
-            document.getElementById('clearCanvasBtn').addEventListener('click', () => {
-                if(confirm('هل أنت متأكد من مسح الرسومات؟')) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
-            });
-
-            document.getElementById('downloadAnnotatedBtn').addEventListener('click', downloadAnnotatedPage);
         }
 
         function renderPosts() {
-            const query = searchInput.value.trim().toLowerCase();
-
-            const filtered = posts.filter(post => {
-                const matchesSubject = activeSubject === 'all' || post.subject === activeSubject;
-                const matchesType = activeType === 'all' || post.type === activeType;
-                const matchesQuery = post.title.toLowerCase().includes(query) || (post.description && post.description.toLowerCase().includes(query));
-                return matchesSubject && matchesType && matchesQuery;
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = posts.filter(p => {
+                const matchSubject = activeSubject === 'all' || p.subject === activeSubject;
+                const matchType = activeType === 'all' || p.type === activeType;
+                const matchSearch = p.title.toLowerCase().includes(searchQuery) || (p.description && p.description.toLowerCase().includes(searchQuery));
+                return matchSubject && matchType && matchSearch;
             });
 
-            itemsCount.innerText = `${filtered.length} عنصر`;
+            document.getElementById('itemsCount').innerText = `${filtered.length} عنصر`;
+            const grid = document.getElementById('postsGrid');
+            const emptyState = document.getElementById('emptyState');
+            grid.innerHTML = '';
 
-            if(filtered.length === 0) {
-                postsGrid.innerHTML = '';
+            if (filtered.length === 0) {
                 emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-                postsGrid.innerHTML = filtered.map(post => createPostCardHTML(post)).join('');
+                return;
             }
-        }
+            emptyState.classList.add('hidden');
 
-        function createPostCardHTML(post) {
-            const badgeColor = post.type === 'كتاب' ? 'bg-amber-100 text-amber-700' : 
-                               post.type === 'ملزمة' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700';
-
-            const placeholderBg = post.subject === 'Math' ? 'from-purple-500 to-indigo-600' :
-                                  post.subject === 'English' || post.subject === 'Connect' ? 'from-blue-500 to-cyan-600' :
-                                  post.subject === 'ICT' ? 'from-teal-500 to-emerald-600' : 'from-rose-500 to-orange-500';
-
-            const coverImageSrc = (post.images && post.images.length > 0) ? post.images[0] : null;
-
-            return `
-                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group">
-                    <div class="h-44 bg-gradient-to-br ${placeholderBg} relative overflow-hidden flex items-center justify-center p-4">
-                        ${coverImageSrc ? `
-                            <img src="${coverImageSrc}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90">
-                            <div class="absolute inset-0 bg-slate-900/20"></div>
-                        ` : `
-                            <div class="text-white text-center">
-                                <i class="fa-solid ${post.type === 'كتاب' ? 'fa-book-open' : 'fa-file-lines'} text-4xl mb-2 opacity-80"></i>
-                                <span class="block font-extrabold text-lg opacity-90">${post.subject}</span>
-                            </div>
-                        `}
-
-                        <div class="absolute top-3 right-3 flex gap-1.5">
-                            <span class="${badgeColor} text-[11px] font-extrabold px-2.5 py-1 rounded-lg shadow-sm">
-                                ${post.type}
-                            </span>
-                        </div>
-
-                        <div class="absolute top-3 left-3">
-                            <span class="bg-slate-900/60 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
-                                ${post.subject}
-                            </span>
-                        </div>
+            filtered.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col';
+                card.innerHTML = `
+                    <div class="h-40 bg-slate-100 relative overflow-hidden flex items-center justify-center">
+                        ${post.images && post.images.length > 0 ? `<img src="${post.images[0]}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-book text-3xl text-slate-300"></i>'}
+                        <span class="absolute top-3 right-3 bg-slate-900/70 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">${post.subject}</span>
+                        <span class="absolute top-3 left-3 bg-sky-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">${post.type}</span>
                     </div>
-
                     <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
                         <div>
-                            <h3 class="font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-2 group-hover:text-sky-600 transition-colors">
-                                ${post.title}
-                            </h3>
-                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                                ${post.description || 'لا يوجد وصف إضافي.'}
-                            </p>
+                            <h3 class="font-bold text-slate-800 text-base mb-1 line-clamp-1">${post.title}</h3>
+                            <p class="text-xs text-slate-500 line-clamp-2">${post.description || 'لا يوجد وصف إضافي'}</p>
                         </div>
-
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                            <span><i class="fa-regular fa-clock ml-1"></i> ${post.date}</span>
-                            <span>${post.images ? `${post.images.length} صفحة/صور` : 'ملف PDF'}</span>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button onclick="openViewer('${post.id}')" class="w-full bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-book-open"></i>
-                                <span>فتح واستعراض</span>
-                            </button>
-                            <button onclick="deletePost('${post.id}')" class="bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 font-semibold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1" title="حذف">
-                                <i class="fa-solid fa-trash-can"></i>
-                                <span>حذف</span>
-                            </button>
-                        </div>
+                        <button onclick='openViewer(${JSON.stringify(post).replace(/'/g, "&#39;")})' class="w-full bg-slate-100 hover:bg-sky-600 hover:text-white text-slate-700 text-xs font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-pen-nib"></i><span>فتح المذكرة والتلوين</span>
+                        </button>
                     </div>
-                </div>
-            `;
+                `;
+                grid.appendChild(card);
+            });
         }
 
         function openPublishModal() {
-            publishModal.classList.remove('hidden');
+            document.getElementById('publishModal').classList.remove('hidden');
         }
-
         function closePublishModal() {
-            publishModal.classList.add('hidden');
-            publishForm.reset();
+            document.getElementById('publishModal').classList.add('hidden');
+            document.getElementById('publishForm').reset();
             uploadedImagesBase64 = [];
-            uploadedFileName = '';
-            document.getElementById('fileInputLabel').innerText = 'اضغط هنا لاختيار ملف من جهازك';
-            document.getElementById('imagesInputLabel').innerText = 'اختر صورة أو عدة صور للملزمة المصورة';
             document.getElementById('imagesPreview').innerHTML = '';
+            document.getElementById('imagesInputLabel').innerText = 'اختر صور الصفحات للملزمة';
         }
 
-        function handlePublishSubmit(e) {
-            e.preventDefault();
-
-            const title = document.getElementById('postTitle').value.trim();
-            const typeRadio = document.querySelector('input[name="contentType"]:checked');
-            const type = typeRadio ? typeRadio.value : 'ملزمة';
-            const subject = document.getElementById('postSubject').value;
-            const description = document.getElementById('postDescription').value.trim();
-
-            if(!title || !subject) {
-                alert('الرجاء تعبئة كافة الحقول المطلوبة!');
-                return;
-            }
-
-            const newPost = {
-                id: 'post_' + Date.now(),
-                title: title,
-                type: type,
-                subject: subject,
-                description: description,
-                date: new Date().toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' }),
-                fileName: uploadMode === 'file' ? uploadedFileName : null,
-                images: uploadMode === 'images' && uploadedImagesBase64.length > 0 ? uploadedImagesBase64 : generateDefaultCoverCanvas(title, subject)
-            };
-
-            posts.unshift(newPost);
-            localStorage.setItem('mora3at_posts', JSON.stringify(posts));
-
-            renderPosts();
-            closePublishModal();
-            showToast('تم نشر المحتوى بنجاح!');
-        }
-
-        function generateDefaultCoverCanvas(title, subject) {
-            const canvasTemp = document.createElement('canvas');
-            canvasTemp.width = 600;
-            canvasTemp.height = 800;
-            const ctxTemp = canvasTemp.getContext('2d');
-
-            ctxTemp.fillStyle = '#ffffff';
-            ctxTemp.fillRect(0, 0, 600, 800);
-
-            ctxTemp.strokeStyle = '#0284c7';
-            ctxTemp.lineWidth = 20;
-            ctxTemp.strokeRect(20, 20, 560, 760);
-
-            ctxTemp.fillStyle = '#0284c7';
-            ctxTemp.fillRect(40, 40, 520, 120);
-
-            ctxTemp.fillStyle = '#ffffff';
-            ctxTemp.font = 'bold 32px Cairo, sans-serif';
-            ctxTemp.textAlign = 'center';
-            ctxTemp.fillText('مراجعات خمسة ابتدائي', 300, 110);
-
-            ctxTemp.fillStyle = '#1e293b';
-            ctxTemp.font = 'bold 28px Cairo, sans-serif';
-            
-            const words = title.split(' ');
-            let line = '';
-            let y = 300;
-            for(let n = 0; n < words.length; n++) {
-                let testLine = line + words[n] + ' ';
-                let metrics = ctxTemp.measureText(testLine);
-                if (metrics.width > 480 && n > 0) {
-                    ctxTemp.fillText(line, 300, y);
-                    line = words[n] + ' ';
-                    y += 50;
-                } else {
-                    line = testLine;
-                }
-            }
-            ctxTemp.fillText(line, 300, y);
-
-            ctxTemp.fillStyle = '#f1f5f9';
-            ctxTemp.fillRect(150, 550, 300, 80);
-            ctxTemp.fillStyle = '#0369a1';
-            ctxTemp.font = 'bold 30px Cairo, sans-serif';
-            ctxTemp.fillText(`مادة: ${subject}`, 300, 600);
-
-            return [canvasTemp.toDataURL()];
-        }
-
-        function deletePost(id) {
-            if(confirm('هل أنت متأكد من حذف هذا المحتوى؟')) {
-                posts = posts.filter(p => p.id !== id);
-                localStorage.setItem('mora3at_posts', JSON.stringify(posts));
-                renderPosts();
-                showToast('تم حذف المحتوى بنجاح');
-            }
-        }
-
-        function openViewer(id) {
-            currentPost = posts.find(p => p.id === id);
-            if(!currentPost) return;
-
+        function openViewer(post) {
+            currentPost = post;
             currentImageIndex = 0;
-
-            document.getElementById('viewerTitle').innerText = currentPost.title;
-            document.getElementById('viewerTypeBadge').innerText = currentPost.type;
-
-            viewerModal.classList.remove('hidden');
-            loadViewerImage();
+            document.getElementById('viewerTitle').innerText = post.title;
+            document.getElementById('viewerTypeBadge').innerText = post.type;
+            document.getElementById('viewerModal').classList.remove('hidden');
+            loadViewerPage();
         }
 
-        function loadViewerImage() {
-            const viewerImg = document.getElementById('viewerImage');
-            const multiPageCtrls = document.getElementById('multiPageControls');
-
-            if(currentPost.images && currentPost.images.length > 0) {
-                viewerImg.src = currentPost.images[currentImageIndex];
-
-                if(currentPost.images.length > 1) {
-                    multiPageCtrls.classList.remove('hidden');
-                    document.getElementById('pageIndicator').innerText = `صفحة ${currentImageIndex + 1} من ${currentPost.images.length}`;
-                } else {
-                    multiPageCtrls.classList.add('hidden');
-                }
-            }
-
-            viewerImg.onload = () => {
-                resizeCanvas();
+        function loadViewerPage() {
+            if (!currentPost || !currentPost.images) return;
+            const imgEl = document.getElementById('viewerImage');
+            imgEl.src = currentPost.images[currentImageIndex];
+            
+            imgEl.onload = () => {
+                initCanvasDimensions();
             };
-        }
 
-        function closeViewerModal() {
-            viewerModal.classList.add('hidden');
-            document.getElementById('penToolbar').classList.add('hidden');
+            const multiPage = document.getElementById('multiPageControls');
+            if (currentPost.images.length > 1) {
+                multiPage.classList.remove('hidden');
+                document.getElementById('pageIndicator').innerText = `صفحة ${currentImageIndex + 1} من ${currentPost.images.length}`;
+                document.getElementById('prevPageBtn').disabled = currentImageIndex === 0;
+                document.getElementById('nextPageBtn').disabled = currentImageIndex === currentPost.images.length - 1;
+            } else {
+                multiPage.classList.add('hidden');
+            }
         }
 
         function initCanvas() {
             canvas = document.getElementById('drawingCanvas');
             ctx = canvas.getContext('2d');
-
+            
             canvas.addEventListener('mousedown', startDrawing);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
 
-            canvas.addEventListener('touchstart', (e) => {
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousedown', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+
+            document.getElementById('closeViewerModalBtn').addEventListener('click', () => {
+                document.getElementById('viewerModal').classList.add('hidden');
+            });
+
+            document.getElementById('togglePenToolbarBtn').addEventListener('click', () => {
+                document.getElementById('penToolbar').classList.toggle('hidden');
+            });
+
+            document.getElementById('toolPen').addEventListener('click', () => { currentTool = 'pen'; updateToolActive(); });
+            document.getElementById('toolEraser').addEventListener('click', () => { currentTool = 'eraser'; updateToolActive(); });
+
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentColor = e.target.getAttribute('data-color');
+                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('border-white/80', 'scale-110'));
+                    e.target.classList.add('border-white/80', 'scale-110');
                 });
-                canvas.dispatchEvent(mouseEvent);
-            }, {passive: false});
+            });
 
-            canvas.addEventListener('touchmove', (e) => {
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousemove', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                canvas.dispatchEvent(mouseEvent);
-            }, {passive: false});
+            const brushSizeRange = document.getElementById('brushSize');
+            brushSizeRange.addEventListener('input', (e) => {
+                currentLineWidth = e.target.value;
+                document.getElementById('brushSizeVal').innerText = currentLineWidth;
+            });
 
-            canvas.addEventListener('touchend', () => {
-                const mouseEvent = new MouseEvent('mouseup', {});
-                canvas.dispatchEvent(mouseEvent);
+            document.getElementById('clearCanvasBtn').addEventListener('click', () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+
+            document.getElementById('downloadAnnotatedBtn').addEventListener('click', () => {
+                const mergedCanvas = document.createElement('canvas');
+                const img = document.getElementById('viewerImage');
+                mergedCanvas.width = img.naturalWidth;
+                mergedCanvas.height = img.naturalHeight;
+                const mCtx = mergedCanvas.getContext('2d');
+                mCtx.drawImage(img, 0, 0);
+                mCtx.drawImage(canvas, 0, 0, mergedCanvas.width, mergedCanvas.height);
+
+                const link = document.createElement('a');
+                link.download = `annotated_page_${currentImageIndex + 1}.png`;
+                link.href = mergedCanvas.toDataURL('image/png');
+                link.click();
+                showToast('تم حفظ الصفحة بنجاح!');
+            });
+
+            document.getElementById('prevPageBtn').addEventListener('click', () => {
+                if(currentImageIndex > 0) { currentImageIndex--; loadViewerPage(); }
+            });
+            document.getElementById('nextPageBtn').addEventListener('click', () => {
+                if(currentImageIndex < currentPost.images.length - 1) { currentImageIndex++; loadViewerPage(); }
             });
         }
 
-        function resizeCanvas() {
+        function initCanvasDimensions() {
             const img = document.getElementById('viewerImage');
-            if (!img) return;
-
             canvas.width = img.clientWidth;
             canvas.height = img.clientHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        window.addEventListener('resize', resizeCanvas);
-
-        function setTool(tool, element) {
-            currentTool = tool;
+        function updateToolActive() {
             document.querySelectorAll('.pen-tool-btn').forEach(b => {
-                b.classList.remove('active', 'bg-sky-500', 'text-white');
-                b.classList.add('text-slate-300');
+                b.classList.remove('bg-sky-500', 'text-white');
+                b.classList.add('hover:bg-slate-600', 'text-slate-300');
             });
-            element.classList.add('active', 'bg-sky-500', 'text-white');
-            element.classList.remove('text-slate-300');
+            const activeBtn = currentTool === 'pen' ? document.getElementById('toolPen') : document.getElementById('toolEraser');
+            activeBtn.classList.add('bg-sky-500', 'text-white');
+            activeBtn.classList.remove('hover:bg-slate-600', 'text-slate-300');
         }
 
-        function getCanvasCoordinates(e) {
+        function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
             return {
                 x: e.clientX - rect.left,
@@ -883,77 +667,58 @@
         }
 
         function startDrawing(e) {
-            const coords = getCanvasCoordinates(e);
-
-            if(currentTool === 'text') {
-                const text = prompt('أدخل النص الذي تريد كتابته:');
-                if(text) {
-                    ctx.font = `bold ${currentLineWidth * 5 + 14}px Cairo, sans-serif`;
-                    ctx.fillStyle = currentColor;
-                    ctx.fillText(text, coords.x, coords.y);
-                }
-                return;
-            }
-
             isDrawing = true;
-            lastX = coords.x;
-            lastY = coords.y;
+            const pos = getMousePos(e);
+            lastX = pos.x;
+            lastY = pos.y;
         }
 
         function draw(e) {
             if (!isDrawing) return;
-            const coords = getCanvasCoordinates(e);
+            const pos = getMousePos(e);
 
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
-            ctx.lineTo(coords.x, coords.y);
-
-            if(currentTool === 'eraser') {
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.lineWidth = currentLineWidth * 6;
-            } else {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = currentColor;
-                ctx.lineWidth = currentLineWidth;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-            }
-
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
+            ctx.lineWidth = currentTool === 'eraser' ? currentLineWidth * 3 : currentLineWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
             ctx.stroke();
-            lastX = coords.x;
-            lastY = coords.y;
+
+            lastX = pos.x;
+            lastY = pos.y;
         }
 
         function stopDrawing() {
             isDrawing = false;
         }
 
-        function downloadAnnotatedPage() {
-            const img = document.getElementById('viewerImage');
-            
-            const mergeCanvas = document.createElement('canvas');
-            mergeCanvas.width = img.naturalWidth || canvas.width;
-            mergeCanvas.height = img.naturalHeight || canvas.height;
-            const mCtx = mergeCanvas.getContext('2d');
-
-            mCtx.drawImage(img, 0, 0, mergeCanvas.width, mergeCanvas.height);
-            mCtx.drawImage(canvas, 0, 0, mergeCanvas.width, mergeCanvas.height);
-
-            const link = document.createElement('a');
-            link.download = `مراجعة_معدلة_${Date.now()}.png`;
-            link.href = mergeCanvas.toDataURL('image/png');
-            link.click();
-
-            showToast('تم حفظ الصفحة المعدلة بنجاح!');
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
         }
 
-        function showToast(msg) {
+        function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').innerText = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-            
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.innerText = message;
+            if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-triangle-exclamation text-rose-400 text-lg';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
         }
     </script>
